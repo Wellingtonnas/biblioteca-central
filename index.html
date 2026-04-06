@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Biblioteca Central</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topo">
+    <div class="container topo-conteudo">
+      <div>
+        <h1>Biblioteca Central</h1>
+        <p>Livros gratuitos e pagos em um só lugar</p>
+      </div>
+
+      <nav class="menu">
+        <a href="index.html" class="ativo">Biblioteca</a>
+        <a href="admin.html">Painel Admin</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div>
+        <h2>Explore a Biblioteca Central</h2>
+        <p>Pesquise por título, autor, coleção, categoria ou volume.</p>
+      </div>
+
+      <div class="filtros">
+        <input type="text" id="busca" placeholder="Buscar livro..." />
+        <select id="filtroTipo">
+          <option value="todos">Todos</option>
+          <option value="gratuito">Gratuitos</option>
+          <option value="pago">Pagos</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="resumo-cards">
+      <div class="resumo-card">
+        <span>Total de livros</span>
+        <strong id="resumoTotal">0</strong>
+      </div>
+
+      <div class="resumo-card">
+        <span>Gratuitos</span>
+        <strong id="resumoGratis">0</strong>
+      </div>
+
+      <div class="resumo-card">
+        <span>Pagos</span>
+        <strong id="resumoPagos">0</strong>
+      </div>
+
+      <div class="resumo-card destaque">
+        <span>Somatório dos pagos</span>
+        <strong id="resumoSomatorio">R$ 0,00</strong>
+      </div>
+    </section>
+
+    <section class="secao">
+      <div class="secao-titulo">
+        <h3>Categorias</h3>
+        <button class="btn btn-secundario" id="btnLimparCategoria">Limpar filtro</button>
+      </div>
+
+      <div id="listaCategorias" class="categorias-wrap"></div>
+    </section>
+
+    <section class="secao">
+      <div class="secao-titulo">
+        <h3>Livros disponíveis</h3>
+        <span id="totalLivros">0 livros</span>
+      </div>
+
+      <div id="listaLivros" class="grid-livros"></div>
+    </section>
+
+    <section class="secao">
+      <div class="secao-titulo">
+        <h3>Favoritos</h3>
+        <span id="totalFavoritos">0 item(ns)</span>
+      </div>
+
+      <div id="listaFavoritos" class="lista-carrinho"></div>
+    </section>
+
+    <section class="secao">
+      <div class="secao-titulo">
+        <h3>Carrinho de compras</h3>
+        <span id="totalItensCarrinho">0 item(ns)</span>
+      </div>
+
+      <div class="carrinho-box">
+        <div id="listaCarrinho" class="lista-carrinho"></div>
+
+        <div class="carrinho-resumo">
+          <div class="carrinho-linha">
+            <span>Subtotal</span>
+            <strong id="subtotalCarrinho">R$ 0,00</strong>
+          </div>
+          <div class="carrinho-linha">
+            <span>Total</span>
+            <strong id="totalCarrinho">R$ 0,00</strong>
+          </div>
+
+          <div class="acoes-carrinho">
+            <button id="btnLimparCarrinho" class="btn btn-secundario">Limpar carrinho</button>
+            <button id="btnFinalizarWhatsapp" class="btn btn-primario">Finalizar por WhatsApp</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>

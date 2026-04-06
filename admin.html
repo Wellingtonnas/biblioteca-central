@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel Administrativo - Biblioteca Central</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topo">
+    <div class="container topo-conteudo">
+      <div>
+        <h1>Biblioteca Central</h1>
+        <p>Painel administrativo da biblioteca</p>
+      </div>
+
+      <nav class="menu">
+        <a href="index.html">Biblioteca</a>
+        <a href="admin.html" class="ativo">Painel Admin</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container admin-area">
+    <section id="areaLogin" class="card-login">
+      <h2>Login do Administrador</h2>
+      <p class="subtexto">Entre para gerenciar os livros da Biblioteca Central.</p>
+
+      <form id="formLogin">
+        <div class="campo">
+          <label for="usuarioAdmin">E-mail</label>
+          <input type="email" id="usuarioAdmin" required />
+        </div>
+
+        <div class="campo">
+          <label for="senhaAdmin">Senha</label>
+          <input type="password" id="senhaAdmin" required />
+        </div>
+
+        <button type="submit" class="btn btn-primario">Entrar</button>
+      </form>
+    </section>
+
+    <section id="areaPainel" class="painel-oculto">
+      <div class="painel-topo-acoes">
+        <h2>Painel Administrativo</h2>
+        <button id="btnLogout" class="btn btn-perigo">Sair</button>
+      </div>
+
+      <div class="admin-layout">
+        <section class="card-form">
+          <h2 id="tituloFormulario">Novo Livro</h2>
+
+          <form id="formLivro">
+            <input type="hidden" id="livroId" />
+
+            <div class="grid-form">
+              <div class="campo">
+                <label for="titulo">Título</label>
+                <input type="text" id="titulo" required />
+              </div>
+
+              <div class="campo">
+                <label for="autor">Autor</label>
+                <input type="text" id="autor" required />
+              </div>
+
+              <div class="campo">
+                <label for="categoria">Categoria</label>
+                <input type="text" id="categoria" required />
+              </div>
+
+              <div class="campo">
+                <label for="colecao">Coleção</label>
+                <input type="text" id="colecao" />
+              </div>
+
+              <div class="campo">
+                <label for="volume">Volume</label>
+                <input type="number" id="volume" min="1" value="1" />
+              </div>
+
+              <div class="campo">
+                <label for="tipo">Tipo</label>
+                <select id="tipo" required>
+                  <option value="gratuito">Gratuito</option>
+                  <option value="pago">Pago</option>
+                </select>
+              </div>
+
+              <div class="campo">
+                <label for="capa">URL da capa</label>
+                <input type="text" id="capa" placeholder="https://..." />
+              </div>
+
+              <div class="campo">
+                <label for="arquivo">Link do PDF / arquivo</label>
+                <input type="text" id="arquivo" placeholder="https://..." />
+              </div>
+
+              <div class="campo" id="campoPreco">
+                <label for="preco">Preço (R$)</label>
+                <input type="number" id="preco" min="0" step="0.01" />
+              </div>
+
+              <div class="campo" id="campoDesconto">
+                <label for="desconto">Desconto (%)</label>
+                <input type="number" id="desconto" min="0" max="100" step="1" />
+              </div>
+
+              <div class="campo" id="campoCompra">
+                <label for="linkCompra">Link de compra</label>
+                <input type="text" id="linkCompra" placeholder="https://wa.me/..." />
+              </div>
+            </div>
+
+            <div class="campo">
+              <label for="descricao">Descrição</label>
+              <textarea id="descricao" rows="4" required></textarea>
+            </div>
+
+            <div class="acoes-form">
+              <button type="submit" id="btnSalvar" class="btn btn-primario">Salvar Livro</button>
+              <button type="button" id="btnLimpar" class="btn btn-secundario">Limpar</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="card-lista">
+          <div class="resumo-admin">
+            <div class="mini-card">
+              <span>Total</span>
+              <strong id="adminTotal">0</strong>
+            </div>
+
+            <div class="mini-card">
+              <span>Gratuitos</span>
+              <strong id="adminGratis">0</strong>
+            </div>
+
+            <div class="mini-card">
+              <span>Pagos</span>
+              <strong id="adminPagos">0</strong>
+            </div>
+
+            <div class="mini-card destaque">
+              <span>Somatório pagos</span>
+              <strong id="adminSomatorio">R$ 0,00</strong>
+            </div>
+          </div>
+
+          <div class="secao-titulo margem-topo">
+            <h2>Livros cadastrados</h2>
+            <span id="contadorAdmin">0 livros</span>
+          </div>
+
+          <div id="listaAdmin" class="lista-admin"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>
