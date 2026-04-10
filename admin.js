@@ -2,6 +2,9 @@ import { supabase } from "./supabase.js";
 
 let livrosCache = [];
 
+/* =========================
+   UTILITÁRIOS
+========================= */
 function formatarPreco(valor) {
   return Number(valor || 0).toLocaleString("pt-BR", {
     style: "currency",
@@ -15,25 +18,56 @@ function calcularPrecoFinal(preco, desconto) {
   return valor - (valor * percentual / 100);
 }
 
-async function obterUsuarioAtual() {
-  const { data, error } = await supabase.auth.getUser();
-  if (error) {
-    console.error(error);
-    return null;
+function mostrarErroSupabase(error, mensagemPadrao = "Ocorreu um erro.") {
+  console.error(error);
+
+  if (error?.message) {
+    alert(`${mensagemPadrao}\n\n${error.message}`);
+    return;
   }
-  return data.user;
+
+  alert(mensagemPadrao);
 }
 
+/* =========================
+   AUTH
+========================= */
+async function obterUsuarioAtual() {
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error) {
+    console.error("Erro ao obter usuário atual:", error);
+    return null;
+  }
+
+  return data?.user || null;
+}
+
+async function fazerLogin(email, password) {
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) throw error;
+}
+
+async function fazerLogout() {
+  const { error } = await supabase.auth.signOut();
+
+  if (error) throw error;
+}
+
+/* =========================
+   BANCO - LIVROS
+========================= */
 async function obterLivros() {
   const { data, error } = await supabase
     .from("livros")
     .select("*")
     .order("id", { ascending: true });
 
-  if (error) {
-    console.error("Erro ao buscar livros:", error);
-    return [];
-  }
+  if (error) throw error;
 
   return data || [];
 }
@@ -64,11 +98,20 @@ async function excluirLivroDoBanco(id) {
   if (error) throw error;
 }
 
+/* =========================
+   UI
+========================= */
 function atualizarCamposPorTipo() {
   const tipo = document.getElementById("tipo").value;
-  document.getElementById("campoPreco").style.display = tipo === "pago" ? "block" : "none";
-  document.getElementById("campoDesconto").style.display = tipo === "pago" ? "block" : "none";
-  document.getElementById("campoCompra").style.display = tipo === "pago" ? "block" : "none";
+
+  document.getElementById("campoPreco").style.display =
+    tipo === "pago" ? "block" : "none";
+
+  document.getElementById("campoDesconto").style.display =
+    tipo === "pago" ? "block" : "none";
+
+  document.getElementById("campoCompra").style.display =
+    tipo === "pago" ? "block" : "none";
 }
 
 function limparFormulario() {
@@ -103,34 +146,17 @@ function preencherFormularioParaEdicao(livro) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-window.editarLivro = function (id) {
-  const livro = livrosCache.find(l => l.id === id);
-  if (!livro) return;
-  preencherFormularioParaEdicao(livro);
-};
-
-window.excluirLivro = async function (id) {
-  const confirmar = confirm("Deseja realmente excluir este livro?");
-  if (!confirmar) return;
-
-  try {
-    await excluirLivroDoBanco(id);
-    alert("Livro excluído com sucesso!");
-    await carregarLivrosAdmin();
-    limparFormulario();
-  } catch (error) {
-    console.error(error);
-    alert("Erro ao excluir livro.");
-  }
-};
-
 function atualizarResumoAdmin(livros) {
   const total = livros.length;
-  const gratuitos = livros.filter(l => l.tipo === "gratuito").length;
-  const pagos = livros.filter(l => l.tipo === "pago").length;
+  const gratuitos = livros.filter((l) => l.tipo === "gratuito").length;
+  const pagos = livros.filter((l) => l.tipo === "pago").length;
+
   const somatorio = livros
-    .filter(l => l.tipo === "pago")
-    .reduce((acc, livro) => acc + calcularPrecoFinal(livro.preco, livro.desconto), 0);
+    .filter((l) => l.tipo === "pago")
+    .reduce(
+      (acc, livro) => acc + calcularPrecoFinal(livro.preco, livro.desconto),
+      0
+    );
 
   document.getElementById("adminTotal").textContent = total;
   document.getElementById("adminGratis").textContent = gratuitos;
@@ -150,37 +176,48 @@ function renderizarListaAdmin() {
     return;
   }
 
-  lista.innerHTML = livrosCache.map((livro) => {
-    const precoFinal = calcularPrecoFinal(livro.preco, livro.desconto);
+  lista.innerHTML = livrosCache
+    .map((livro) => {
+      const precoFinal = calcularPrecoFinal(livro.preco, livro.desconto);
 
-    return `
-      <div class="item-admin">
-        <div>
-          <h4>${livro.titulo}</h4>
-          <p><strong>Autor:</strong> ${livro.autor}</p>
-          <p><strong>Categoria:</strong> ${livro.categoria}</p>
-          <p><strong>Coleção:</strong> ${livro.colecao || "-"}</p>
-          <p><strong>Volume:</strong> ${livro.volume || 1}</p>
-          <p><strong>Tipo:</strong> ${livro.tipo === "gratuito" ? "Gratuito" : "Pago"}</p>
-          ${
-            livro.tipo === "pago"
-              ? `<p><strong>Preço final:</strong> ${formatarPreco(precoFinal)}</p>`
-              : `<p><strong>Acesso:</strong> Gratuito</p>`
-          }
-        </div>
+      return `
+        <div class="item-admin">
+          <div>
+            <h4>${livro.titulo}</h4>
+            <p><strong>Autor:</strong> ${livro.autor}</p>
+            <p><strong>Categoria:</strong> ${livro.categoria}</p>
+            <p><strong>Coleção:</strong> ${livro.colecao || "-"}</p>
+            <p><strong>Volume:</strong> ${livro.volume || 1}</p>
+            <p><strong>Tipo:</strong> ${
+              livro.tipo === "gratuito" ? "Gratuito" : "Pago"
+            }</p>
+            ${
+              livro.tipo === "pago"
+                ? `<p><strong>Preço final:</strong> ${formatarPreco(precoFinal)}</p>`
+                : `<p><strong>Acesso:</strong> Gratuito</p>`
+            }
+          </div>
 
-        <div class="acoes-admin">
-          <button class="btn btn-secundario" onclick="editarLivro(${livro.id})">Editar</button>
-          <button class="btn btn-perigo" onclick="excluirLivro(${livro.id})">Excluir</button>
+          <div class="acoes-admin">
+            <button class="btn btn-secundario" onclick="editarLivro(${livro.id})">Editar</button>
+            <button class="btn btn-perigo" onclick="excluirLivro(${livro.id})">Excluir</button>
+          </div>
         </div>
-      </div>
-    `;
-  }).join("");
+      `;
+    })
+    .join("");
 }
 
+/* =========================
+   CARREGAMENTO
+========================= */
 async function carregarLivrosAdmin() {
-  livrosCache = await obterLivros();
-  renderizarListaAdmin();
+  try {
+    livrosCache = await obterLivros();
+    renderizarListaAdmin();
+  } catch (error) {
+    mostrarErroSupabase(error, "Erro ao carregar livros.");
+  }
 }
 
 async function atualizarTelaLogin() {
@@ -199,31 +236,61 @@ async function atualizarTelaLogin() {
   }
 }
 
+/* =========================
+   AÇÕES GLOBAIS
+========================= */
+window.editarLivro = function (id) {
+  const livro = livrosCache.find((l) => l.id === id);
+  if (!livro) return;
+
+  preencherFormularioParaEdicao(livro);
+};
+
+window.excluirLivro = async function (id) {
+  const confirmar = confirm("Deseja realmente excluir este livro?");
+  if (!confirmar) return;
+
+  try {
+    await excluirLivroDoBanco(id);
+    alert("Livro excluído com sucesso!");
+    await carregarLivrosAdmin();
+    limparFormulario();
+  } catch (error) {
+    mostrarErroSupabase(error, "Erro ao excluir livro.");
+  }
+};
+
+/* =========================
+   EVENTOS
+========================= */
 document.getElementById("formLogin").addEventListener("submit", async function (e) {
   e.preventDefault();
 
   const email = document.getElementById("usuarioAdmin").value.trim();
   const password = document.getElementById("senhaAdmin").value.trim();
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if (error) {
-    console.error(error);
-    alert("Email ou senha inválidos.");
+  if (!email || !password) {
+    alert("Preencha email e senha.");
     return;
   }
 
-  alert("Login realizado com sucesso!");
-  await atualizarTelaLogin();
+  try {
+    await fazerLogin(email, password);
+    alert("Login realizado com sucesso!");
+    await atualizarTelaLogin();
+  } catch (error) {
+    mostrarErroSupabase(error, "Email ou senha inválidos.");
+  }
 });
 
 document.getElementById("btnLogout").addEventListener("click", async function () {
-  await supabase.auth.signOut();
-  alert("Você saiu do painel.");
-  await atualizarTelaLogin();
+  try {
+    await fazerLogout();
+    alert("Você saiu do painel.");
+    await atualizarTelaLogin();
+  } catch (error) {
+    mostrarErroSupabase(error, "Erro ao sair do painel.");
+  }
 });
 
 document.getElementById("tipo").addEventListener("change", atualizarCamposPorTipo);
@@ -288,14 +355,19 @@ document.getElementById("formLivro").addEventListener("submit", async function (
     limparFormulario();
     await carregarLivrosAdmin();
   } catch (error) {
-    console.error(error);
-    alert("Erro ao salvar livro.");
+    mostrarErroSupabase(error, "Erro ao salvar livro.");
   }
 });
 
+/* =========================
+   OBSERVA MUDANÇA DE SESSÃO
+========================= */
 supabase.auth.onAuthStateChange(async () => {
   await atualizarTelaLogin();
 });
 
+/* =========================
+   INICIALIZAÇÃO
+========================= */
 atualizarCamposPorTipo();
 atualizarTelaLogin();

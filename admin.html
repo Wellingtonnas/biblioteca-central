@@ -24,17 +24,29 @@
   <main class="container admin-area">
     <section id="areaLogin" class="card-login">
       <h2>Login do Administrador</h2>
-      <p class="subtexto">Entre para gerenciar os livros da Biblioteca Central.</p>
+      <p class="subtexto">Entre com seu e-mail e senha cadastrados no Supabase Auth.</p>
 
       <form id="formLogin">
         <div class="campo">
-          <label for="usuarioAdmin">E-mail</label>
-          <input type="email" id="usuarioAdmin" required />
+          <label for="usuarioAdmin">E-mail do administrador</label>
+          <input
+            type="email"
+            id="usuarioAdmin"
+            placeholder="seuemail@exemplo.com"
+            autocomplete="email"
+            required
+          />
         </div>
 
         <div class="campo">
           <label for="senhaAdmin">Senha</label>
-          <input type="password" id="senhaAdmin" required />
+          <input
+            type="password"
+            id="senhaAdmin"
+            placeholder="Digite sua senha"
+            autocomplete="current-password"
+            required
+          />
         </div>
 
         <button type="submit" class="btn btn-primario">Entrar</button>
@@ -89,13 +101,21 @@
               </div>
 
               <div class="campo">
-                <label for="capa">URL da capa</label>
-                <input type="text" id="capa" placeholder="https://..." />
+                <label for="capa">Caminho/URL da capa</label>
+                <input
+                  type="text"
+                  id="capa"
+                  placeholder="assets/livros/livro.jpg ou https://..."
+                />
               </div>
 
               <div class="campo">
-                <label for="arquivo">Link do PDF / arquivo</label>
-                <input type="text" id="arquivo" placeholder="https://..." />
+                <label for="arquivo">Caminho/URL do PDF</label>
+                <input
+                  type="text"
+                  id="arquivo"
+                  placeholder="assets/pdfs/gratis/livro.pdf ou https://..."
+                />
               </div>
 
               <div class="campo" id="campoPreco">
@@ -109,8 +129,12 @@
               </div>
 
               <div class="campo" id="campoCompra">
-                <label for="linkCompra">Link de compra</label>
-                <input type="text" id="linkCompra" placeholder="https://wa.me/..." />
+                <label for="linkCompra">Link de compra / WhatsApp</label>
+                <input
+                  type="text"
+                  id="linkCompra"
+                  placeholder="https://wa.me/..."
+                />
               </div>
             </div>
 
