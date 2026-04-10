@@ -20,27 +20,21 @@ function calcularPrecoFinal(preco, desconto) {
 
 function mostrarErroSupabase(error, mensagemPadrao = "Ocorreu um erro.") {
   console.error(error);
-
-  if (error?.message) {
-    alert(`${mensagemPadrao}\n\n${error.message}`);
-    return;
-  }
-
-  alert(mensagemPadrao);
+  alert(`${mensagemPadrao}\n\n${error?.message || error}`);
 }
 
 /* =========================
    AUTH
 ========================= */
-async function obterUsuarioAtual() {
-  const { data, error } = await supabase.auth.getUser();
+async function obterSessaoAtual() {
+  const { data, error } = await supabase.auth.getSession();
 
   if (error) {
-    console.error("Erro ao obter usuário atual:", error);
+    console.error("Erro ao obter sessão:", error);
     return null;
   }
 
-  return data?.user || null;
+  return data.session;
 }
 
 async function fazerLogin(email, password) {
@@ -54,12 +48,11 @@ async function fazerLogin(email, password) {
 
 async function fazerLogout() {
   const { error } = await supabase.auth.signOut();
-
   if (error) throw error;
 }
 
 /* =========================
-   BANCO - LIVROS
+   BANCO
 ========================= */
 async function obterLivros() {
   const { data, error } = await supabase
@@ -176,60 +169,54 @@ function renderizarListaAdmin() {
     return;
   }
 
-  lista.innerHTML = livrosCache
-    .map((livro) => {
-      const precoFinal = calcularPrecoFinal(livro.preco, livro.desconto);
+  lista.innerHTML = livrosCache.map((livro) => {
+    const precoFinal = calcularPrecoFinal(livro.preco, livro.desconto);
 
-      return `
-        <div class="item-admin">
-          <div>
-            <h4>${livro.titulo}</h4>
-            <p><strong>Autor:</strong> ${livro.autor}</p>
-            <p><strong>Categoria:</strong> ${livro.categoria}</p>
-            <p><strong>Coleção:</strong> ${livro.colecao || "-"}</p>
-            <p><strong>Volume:</strong> ${livro.volume || 1}</p>
-            <p><strong>Tipo:</strong> ${
-              livro.tipo === "gratuito" ? "Gratuito" : "Pago"
-            }</p>
-            ${
-              livro.tipo === "pago"
-                ? `<p><strong>Preço final:</strong> ${formatarPreco(precoFinal)}</p>`
-                : `<p><strong>Acesso:</strong> Gratuito</p>`
-            }
-          </div>
-
-          <div class="acoes-admin">
-            <button class="btn btn-secundario" onclick="editarLivro(${livro.id})">Editar</button>
-            <button class="btn btn-perigo" onclick="excluirLivro(${livro.id})">Excluir</button>
-          </div>
+    return `
+      <div class="item-admin">
+        <div>
+          <h4>${livro.titulo}</h4>
+          <p><strong>Autor:</strong> ${livro.autor}</p>
+          <p><strong>Categoria:</strong> ${livro.categoria}</p>
+          <p><strong>Coleção:</strong> ${livro.colecao || "-"}</p>
+          <p><strong>Volume:</strong> ${livro.volume || 1}</p>
+          <p><strong>Tipo:</strong> ${livro.tipo === "gratuito" ? "Gratuito" : "Pago"}</p>
+          ${
+            livro.tipo === "pago"
+              ? `<p><strong>Preço final:</strong> ${formatarPreco(precoFinal)}</p>`
+              : `<p><strong>Acesso:</strong> Gratuito</p>`
+          }
         </div>
-      `;
-    })
-    .join("");
+
+        <div class="acoes-admin">
+          <button class="btn btn-secundario" onclick="editarLivro(${livro.id})">Editar</button>
+          <button class="btn btn-perigo" onclick="excluirLivro(${livro.id})">Excluir</button>
+        </div>
+      </div>
+    `;
+  }).join("");
 }
 
-/* =========================
-   CARREGAMENTO
-========================= */
 async function carregarLivrosAdmin() {
-  try {
-    livrosCache = await obterLivros();
-    renderizarListaAdmin();
-  } catch (error) {
-    mostrarErroSupabase(error, "Erro ao carregar livros.");
-  }
+  livrosCache = await obterLivros();
+  renderizarListaAdmin();
 }
 
 async function atualizarTelaLogin() {
   const areaLogin = document.getElementById("areaLogin");
   const areaPainel = document.getElementById("areaPainel");
 
-  const user = await obterUsuarioAtual();
+  const sessao = await obterSessaoAtual();
 
-  if (user) {
+  if (sessao?.user) {
     areaLogin.style.display = "none";
     areaPainel.style.display = "block";
-    await carregarLivrosAdmin();
+
+    try {
+      await carregarLivrosAdmin();
+    } catch (error) {
+      mostrarErroSupabase(error, "Erro ao carregar livros.");
+    }
   } else {
     areaLogin.style.display = "block";
     areaPainel.style.display = "none";
@@ -286,8 +273,16 @@ document.getElementById("formLogin").addEventListener("submit", async function (
 document.getElementById("btnLogout").addEventListener("click", async function () {
   try {
     await fazerLogout();
-    alert("Você saiu do painel.");
+    limparFormulario();
+    livrosCache = [];
+    document.getElementById("listaAdmin").innerHTML = "";
+    document.getElementById("contadorAdmin").textContent = "0 livros";
+    document.getElementById("adminTotal").textContent = "0";
+    document.getElementById("adminGratis").textContent = "0";
+    document.getElementById("adminPagos").textContent = "0";
+    document.getElementById("adminSomatorio").textContent = "R$ 0,00";
     await atualizarTelaLogin();
+    alert("Você saiu do painel.");
   } catch (error) {
     mostrarErroSupabase(error, "Erro ao sair do painel.");
   }
@@ -344,6 +339,14 @@ document.getElementById("formLivro").addEventListener("submit", async function (
   };
 
   try {
+    const sessao = await obterSessaoAtual();
+
+    if (!sessao?.user) {
+      alert("Sua sessão expirou. Faça login novamente.");
+      await atualizarTelaLogin();
+      return;
+    }
+
     if (id) {
       await atualizarLivroNoBanco(Number(id), dadosLivro);
       alert("Livro atualizado com sucesso!");
@@ -357,13 +360,6 @@ document.getElementById("formLivro").addEventListener("submit", async function (
   } catch (error) {
     mostrarErroSupabase(error, "Erro ao salvar livro.");
   }
-});
-
-/* =========================
-   OBSERVA MUDANÇA DE SESSÃO
-========================= */
-supabase.auth.onAuthStateChange(async () => {
-  await atualizarTelaLogin();
 });
 
 /* =========================
