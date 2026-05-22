@@ -26,14 +26,14 @@ function salvarFavoritos(favoritos) {
 function formatarPreco(valor) {
   return Number(valor || 0).toLocaleString("pt-BR", {
     style: "currency",
-    currency: "BRL"
+    currency: "BRL",
   });
 }
 
 function calcularPrecoFinal(preco, desconto) {
   const valor = Number(preco || 0);
   const percentual = Number(desconto || 0);
-  return valor - (valor * percentual / 100);
+  return valor - (valor * percentual) / 100;
 }
 
 async function obterLivros() {
@@ -46,7 +46,6 @@ async function obterLivros() {
     console.error("Erro ao buscar livros:", error);
     return [];
   }
-
   return data || [];
 }
 
@@ -57,13 +56,11 @@ function livroEhFavorito(id) {
 window.alternarFavorito = function (id) {
   const favoritos = obterFavoritos();
   const indice = favoritos.indexOf(id);
-
   if (indice >= 0) {
     favoritos.splice(indice, 1);
   } else {
     favoritos.push(id);
   }
-
   salvarFavoritos(favoritos);
   renderizarLivros();
   renderizarFavoritos();
@@ -83,13 +80,11 @@ function criarCardLivro(livro) {
 
   if (livro.tipo === "pago") {
     const precoFinal = calcularPrecoFinal(livro.preco, livro.desconto);
-
     precoHtml = `
       ${Number(livro.desconto || 0) > 0 ? `<div class="preco-antigo">${formatarPreco(livro.preco)}</div>` : ""}
       <div class="preco">${formatarPreco(precoFinal)}</div>
       ${Number(livro.desconto || 0) > 0 ? `<span class="desconto-badge">${livro.desconto}% OFF</span>` : ""}
     `;
-
     botoes = `
       <a class="btn btn-secundario" href="detalhes.html?id=${livro.id}">Ver detalhes</a>
       <button class="btn btn-favorito ${favorito ? "ativo" : ""}" onclick="alternarFavorito(${livro.id})">
@@ -119,10 +114,10 @@ function criarCardLivro(livro) {
 
 function atualizarResumo(livros) {
   const total = livros.length;
-  const gratuitos = livros.filter(l => l.tipo === "gratuito").length;
-  const pagos = livros.filter(l => l.tipo === "pago").length;
+  const gratuitos = livros.filter((l) => l.tipo === "gratuito").length;
+  const pagos = livros.filter((l) => l.tipo === "pago").length;
   const somatorioPagos = livros
-    .filter(l => l.tipo === "pago")
+    .filter((l) => l.tipo === "pago")
     .reduce((acc, livro) => acc + calcularPrecoFinal(livro.preco, livro.desconto), 0);
 
   document.getElementById("resumoTotal").textContent = total;
@@ -131,47 +126,42 @@ function atualizarResumo(livros) {
   document.getElementById("resumoSomatorio").textContent = formatarPreco(somatorioPagos);
 }
 
+// ✅ ATUALIZADO: categorias populadas no select de filtro
 function renderizarCategorias() {
-  const container = document.getElementById("listaCategorias");
-  if (!container) return;
+  const select = document.getElementById("filtroCategoria");
+  if (!select) return;
 
-  const categorias = [...new Set(livrosCache.map(l => l.categoria).filter(Boolean))];
+  const categorias = [
+    ...new Set(livrosCache.map((l) => l.categoria).filter(Boolean)),
+  ];
 
-  container.innerHTML = categorias.map(cat => `
-    <button class="chip-categoria ${categoriaSelecionada === cat ? "ativa" : ""}" onclick="selecionarCategoria('${String(cat).replace(/'/g, "\\'")}')">
-      ${cat}
-    </button>
-  `).join("");
+  // Mantém a opção "Todas" e adiciona as categorias
+  select.innerHTML =
+    `<option value="todas">Todas as categorias</option>` +
+    categorias
+      .map((cat) => `<option value="${cat}" ${categoriaSelecionada === cat ? "selected" : ""}>${cat}</option>`)
+      .join("");
 }
-
-window.selecionarCategoria = function (categoria) {
-  categoriaSelecionada = categoria;
-  renderizarCategorias();
-  renderizarLivros();
-};
 
 function renderizarLivros() {
   const lista = document.getElementById("listaLivros");
   const total = document.getElementById("totalLivros");
-  const busca = document.getElementById("busca")?.value.toLowerCase().trim() || "";
-  const filtroTipo = document.getElementById("filtroTipo")?.value || "todos";
+  const busca =
+    document.getElementById("busca")?.value.toLowerCase().trim() || "";
+  const filtroTipo =
+    document.getElementById("filtroTipo")?.value || "todos";
+  const filtroCategoria =
+    document.getElementById("filtroCategoria")?.value || "todas";
 
   let livros = [...livrosCache];
 
   livros = livros.filter((livro) => {
-    const texto = `
-      ${livro.titulo || ""}
-      ${livro.autor || ""}
-      ${livro.categoria || ""}
-      ${livro.descricao || ""}
-      ${livro.colecao || ""}
-      ${livro.volume || ""}
-    `.toLowerCase();
-
+    const texto = `${livro.titulo || ""} ${livro.autor || ""} ${livro.categoria || ""} ${livro.descricao || ""} ${livro.colecao || ""} ${livro.volume || ""}`.toLowerCase();
     const atendeBusca = texto.includes(busca);
     const atendeTipo = filtroTipo === "todos" || livro.tipo === filtroTipo;
-    const atendeCategoria = categoriaSelecionada === "todas" || livro.categoria === categoriaSelecionada;
-
+    const atendeCategoria =
+      filtroCategoria === "todas" ||
+      livro.categoria === filtroCategoria;
     return atendeBusca && atendeTipo && atendeCategoria;
   });
 
@@ -194,7 +184,7 @@ function renderizarFavoritos() {
   if (!lista || !total) return;
 
   const favoritosIds = obterFavoritos();
-  const favoritos = livrosCache.filter(l => favoritosIds.includes(l.id));
+  const favoritos = livrosCache.filter((l) => favoritosIds.includes(l.id));
 
   total.textContent = `${favoritos.length} item(ns)`;
 
@@ -203,7 +193,9 @@ function renderizarFavoritos() {
     return;
   }
 
-  lista.innerHTML = favoritos.map(livro => `
+  lista.innerHTML = favoritos
+    .map(
+      (livro) => `
     <div class="item-carrinho">
       <div>
         <h4>${livro.titulo}</h4>
@@ -215,16 +207,17 @@ function renderizarFavoritos() {
         <button class="btn btn-perigo" onclick="alternarFavorito(${livro.id})">Remover</button>
       </div>
     </div>
-  `).join("");
+  `
+    )
+    .join("");
 }
 
 window.adicionarAoCarrinho = function (idLivro) {
-  const livro = livrosCache.find(l => l.id === idLivro);
-
+  const livro = livrosCache.find((l) => l.id === idLivro);
   if (!livro || livro.tipo !== "pago") return;
 
   const carrinho = obterCarrinho();
-  const itemExistente = carrinho.find(item => item.id === idLivro);
+  const itemExistente = carrinho.find((item) => item.id === idLivro);
 
   if (itemExistente) {
     itemExistente.quantidade += 1;
@@ -235,7 +228,7 @@ window.adicionarAoCarrinho = function (idLivro) {
       autor: livro.autor,
       preco: Number(livro.preco || 0),
       desconto: Number(livro.desconto || 0),
-      quantidade: 1
+      quantidade: 1,
     });
   }
 
@@ -245,19 +238,17 @@ window.adicionarAoCarrinho = function (idLivro) {
 };
 
 window.removerDoCarrinho = function (idLivro) {
-  const carrinho = obterCarrinho().filter(item => item.id !== idLivro);
+  const carrinho = obterCarrinho().filter((item) => item.id !== idLivro);
   salvarCarrinho(carrinho);
   renderizarCarrinho();
 };
 
 window.alterarQuantidade = function (idLivro, delta) {
   const carrinho = obterCarrinho();
-  const item = carrinho.find(i => i.id === idLivro);
-
+  const item = carrinho.find((i) => i.id === idLivro);
   if (!item) return;
 
   item.quantidade += delta;
-
   if (item.quantidade <= 0) {
     window.removerDoCarrinho(idLivro);
     return;
@@ -272,10 +263,14 @@ function renderizarCarrinho() {
   const totalItens = document.getElementById("totalItensCarrinho");
   const subtotalEl = document.getElementById("subtotalCarrinho");
   const totalEl = document.getElementById("totalCarrinho");
+
   if (!listaCarrinho || !totalItens || !subtotalEl || !totalEl) return;
 
   const carrinho = obterCarrinho();
-  const quantidadeTotal = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
+  const quantidadeTotal = carrinho.reduce(
+    (acc, item) => acc + item.quantidade,
+    0
+  );
   totalItens.textContent = `${quantidadeTotal} item(ns)`;
 
   if (carrinho.length === 0) {
@@ -286,13 +281,12 @@ function renderizarCarrinho() {
   }
 
   let subtotal = 0;
-
-  listaCarrinho.innerHTML = carrinho.map(item => {
-    const precoFinal = calcularPrecoFinal(item.preco, item.desconto);
-    const totalItem = precoFinal * item.quantidade;
-    subtotal += totalItem;
-
-    return `
+  listaCarrinho.innerHTML = carrinho
+    .map((item) => {
+      const precoFinal = calcularPrecoFinal(item.preco, item.desconto);
+      const totalItem = precoFinal * item.quantidade;
+      subtotal += totalItem;
+      return `
       <div class="item-carrinho">
         <div>
           <h4>${item.titulo}</h4>
@@ -301,7 +295,6 @@ function renderizarCarrinho() {
           <p><strong>Quantidade:</strong> ${item.quantidade}</p>
           <p><strong>Total:</strong> ${formatarPreco(totalItem)}</p>
         </div>
-
         <div class="acoes-item-carrinho">
           <button class="btn btn-secundario" onclick="alterarQuantidade(${item.id}, -1)">-</button>
           <button class="btn btn-secundario" onclick="alterarQuantidade(${item.id}, 1)">+</button>
@@ -309,7 +302,8 @@ function renderizarCarrinho() {
         </div>
       </div>
     `;
-  }).join("");
+    })
+    .join("");
 
   subtotalEl.textContent = formatarPreco(subtotal);
   totalEl.textContent = formatarPreco(subtotal);
@@ -322,15 +316,13 @@ function limparCarrinho() {
 
 function finalizarPorWhatsapp() {
   const carrinho = obterCarrinho();
-
   if (carrinho.length === 0) {
     alert("Seu carrinho está vazio.");
     return;
   }
 
   let total = 0;
-
-  const linhas = carrinho.map(item => {
+  const linhas = carrinho.map((item) => {
     const precoFinal = calcularPrecoFinal(item.preco, item.desconto);
     const totalItem = precoFinal * item.quantidade;
     total += totalItem;
@@ -339,7 +331,6 @@ function finalizarPorWhatsapp() {
 
   const mensagem = `Olá! Tenho interesse nestes livros:\n\n${linhas.join("\n")}\n\nTotal do pedido: ${formatarPreco(total)}`;
   const url = `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(mensagem)}`;
-
   window.open(url, "_blank");
 }
 
@@ -353,11 +344,16 @@ async function inicializarPagina() {
 
 document.getElementById("busca")?.addEventListener("input", renderizarLivros);
 document.getElementById("filtroTipo")?.addEventListener("change", renderizarLivros);
+document.getElementById("filtroCategoria")?.addEventListener("change", (e) => {
+  categoriaSelecionada = e.target.value;
+  renderizarLivros();
+});
 document.getElementById("btnLimparCarrinho")?.addEventListener("click", limparCarrinho);
 document.getElementById("btnFinalizarWhatsapp")?.addEventListener("click", finalizarPorWhatsapp);
 document.getElementById("btnLimparCategoria")?.addEventListener("click", () => {
   categoriaSelecionada = "todas";
-  renderizarCategorias();
+  const select = document.getElementById("filtroCategoria");
+  if (select) select.value = "todas";
   renderizarLivros();
 });
 
